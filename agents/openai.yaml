@@ -1,0 +1,8 @@
+interface:
+  display_name: "Codex ASO Tool"
+  short_description: "Create App Store screenshot sets"
+  brand_color: "#2563EB"
+  default_prompt: "Use $codex-aso-tool to analyze this iOS app and create App Store-ready screenshots."
+
+policy:
+  allow_implicit_invocation: true
