@@ -139,10 +139,12 @@ Generation has two stages:
 1. Deterministic scaffold with `compose.py`
 2. AI enhancement by one of these routes:
    - Built-in/local image editing tool when available
-   - Gemini API/MCP when the user has API-backed access
-   - Gemini web manual mode when the user only has a Gemini Pro web subscription
+   - OpenAI GPT Image API when the user has `OPENAI_API_KEY`
+   - Gemini/Nano Banana API or MCP when the user has API-backed access
+   - ChatGPT web manual mode when the user has ChatGPT image access but no API key
+   - Gemini web manual mode when the user has Gemini Pro web access but no API key
 
-If no suitable automated image editing tool is available, do not stop. Generate exact App Store-ready scaffolds, write a Gemini-ready prompt, and guide the user through manual Gemini web enhancement.
+If no suitable automated image editing tool is available, do not stop. Generate exact App Store-ready scaffolds, write provider-ready prompts, and guide the user through manual web enhancement.
 
 ### App Store Dimensions
 
@@ -202,9 +204,20 @@ If `assets/device_frame.png` is missing, run:
 python3 /path/to/codex-aso-tool/generate_frame.py
 ```
 
-### AI Enhancement
+### Enhancement Provider Selection
 
-If an image editing/generation tool is available, enhance each scaffold into 3 variants and let the user choose. Keep these constraints:
+Choose the best available enhancement route in this order:
+
+1. Use a built-in/local image editing tool if the active Codex session exposes one that can edit local input images and save outputs.
+2. Use OpenAI GPT Image API only when `OPENAI_API_KEY` is present and the user wants API automation.
+3. Use Gemini/Nano Banana API or MCP only when `GEMINI_API_KEY` or a usable Gemini MCP image tool is present.
+4. Use ChatGPT web manual mode when the user has ChatGPT image access but no OpenAI API key.
+5. Use Gemini web manual mode when the user has Gemini Pro web access but no Gemini API key.
+6. Use scaffold-only mode when the user does not want any external AI enhancement.
+
+Do not assume a web subscription provides API access. ChatGPT Plus/Pro and Gemini Pro web subscriptions are not the same as API keys.
+
+For any AI enhancement route, create 3 variants per scaffold and let the user choose. Keep these constraints:
 
 - Preserve exact headline wording and approximate position.
 - Preserve the app screenshot content.
@@ -217,15 +230,25 @@ After enhancement, crop/resize to exact App Store dimensions before showing the 
 
 If the available tool cannot edit local images with output paths, do not force it. Use the deterministic scaffold output as the final candidate and continue.
 
-### Gemini Web Manual Mode
+### Manual Web Enhancement Mode
 
-Use this mode when the user has Gemini Pro web access but no `GEMINI_API_KEY`, Gemini MCP server, or local image editing tool.
+Use this mode when the user has ChatGPT or Gemini web image access but no API key, MCP server, or local image editing tool.
 
 For each benefit:
 
 1. Generate `scaffold.png` with `compose.py`.
-2. Create `screenshots/NN-benefit-slug/gemini-prompt.md`.
-3. Tell the user to open Gemini/Nano Banana in the browser, upload `scaffold.png`, paste the prompt, generate 3 variants, and save them as:
+2. Create both prompt files:
+
+```text
+screenshots/NN-benefit-slug/chatgpt-prompt.md
+screenshots/NN-benefit-slug/gemini-prompt.md
+```
+
+3. Ask the user which web tool they want to use:
+   - ChatGPT / GPT Image
+   - Gemini / Nano Banana
+
+4. Tell the user to open that tool in the browser, upload `scaffold.png`, paste the matching prompt, generate 3 variants, and save them as:
 
 ```text
 screenshots/NN-benefit-slug/v1.png
@@ -233,13 +256,13 @@ screenshots/NN-benefit-slug/v2.png
 screenshots/NN-benefit-slug/v3.png
 ```
 
-4. After the user saves the files, inspect dimensions and crop/resize them if needed.
-5. Present the 3 variants and let the user choose the final.
+5. After the user saves the files, inspect dimensions and crop/resize them if needed.
+6. Present the 3 variants and let the user choose the final.
 
-Prompt template for the first screenshot:
+ChatGPT prompt template for the first screenshot:
 
 ```text
-This is a scaffold for an App Store screenshot. Transform it into a polished, professional App Store marketing screenshot.
+Edit the uploaded scaffold image into a polished, professional App Store marketing screenshot.
 
 Keep exactly as-is:
 - Headline wording and approximate position
@@ -255,17 +278,23 @@ Enhance:
 Output one portrait image suitable for later crop/resize to App Store screenshot dimensions.
 ```
 
-Prompt template for later screenshots:
+ChatGPT prompt template for later screenshots:
 
 ```text
-Create the next screenshot in the same App Store screenshot set.
+Edit the uploaded scaffold image into the next screenshot in the same App Store screenshot set.
 
 Use the uploaded scaffold as the layout source. Match the first approved screenshot in this set for device style, text treatment, background treatment, polish level, and overall visual language.
 
 Preserve the scaffold headline, app screenshot content, and solid background color. Add breakout UI only when a complete visible app panel directly supports the headline. Do not invent app UI, add watermarks, or add App Store UI chrome.
 ```
 
-When using manual mode, save the prompt path and user-provided variant paths in `.codex/aso-appstore-screenshots/generation.md`.
+Gemini prompt templates should use the same constraints, but phrase the first line as:
+
+```text
+Transform the uploaded scaffold into a polished, professional App Store marketing screenshot.
+```
+
+When using manual mode, save the selected provider, prompt paths, and user-provided variant paths in `.codex/aso-appstore-screenshots/generation.md`.
 
 ### Final Files
 

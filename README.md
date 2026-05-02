@@ -6,7 +6,7 @@ A Codex-first skill that helps generate high-converting App Store screenshots fo
 
 1. **Benefit Discovery** — Analyzes your app's codebase to identify the 3-5 core benefits that drive downloads
 2. **Screenshot Pairing** — Reviews your simulator screenshots, rates them, and pairs each with the best benefit
-3. **Generation** — Creates polished App Store screenshots using deterministic scaffolding (`compose.py`) with optional AI enhancement when an image-editing tool is available
+3. **Generation** — Creates polished App Store screenshots using deterministic scaffolding (`compose.py`) with optional provider-based AI enhancement
 4. **Showcase** — Generates a preview image with all screenshots side-by-side
 
 ## Installation
@@ -52,11 +52,20 @@ The skill uses **SF Pro Display Black** for headline text. On macOS, install it 
 /Library/Fonts/SF-Pro-Display-Black.otf
 ```
 
-### Optional AI enhancement
+### Optional AI Enhancement
 
-Automated enhancement requires an image editing tool, Gemini MCP, or API-backed Gemini access. Most Gemini MCP setups require API credentials; a Gemini Pro web subscription by itself usually does not expose an API key.
+Automated enhancement requires an image editing tool or API-backed provider access. Web subscriptions are useful for manual mode, but they are not the same as API keys.
 
-For Claude Code, the original workflow can use [@houtini/gemini-mcp](https://www.npmjs.com/package/@houtini/gemini-mcp) for AI enhancement:
+Supported enhancement routes:
+
+- Built-in/local image editing tool when available in the active Codex session
+- OpenAI GPT Image API with `OPENAI_API_KEY`
+- Gemini/Nano Banana API or MCP with API-backed access
+- ChatGPT web manual mode
+- Gemini web manual mode
+- Scaffold-only mode
+
+For Claude Code, the original workflow can use [@houtini/gemini-mcp](https://www.npmjs.com/package/@houtini/gemini-mcp) for Gemini/Nano Banana enhancement:
 
 ```bash
 npm install -g @houtini/gemini-mcp
@@ -66,11 +75,11 @@ Then add it to your Claude Code MCP config (`~/.claude/settings.json` or project
 
 For Codex, the skill uses whatever image generation/editing capability is available in the current session. If none is available, it still produces exact App Store-sized scaffold screenshots using `compose.py`.
 
-If you only have Gemini Pro in the browser, use manual Gemini web mode:
+If you only have ChatGPT or Gemini Pro in the browser, use manual web mode:
 
-1. Codex generates `scaffold.png` and `gemini-prompt.md`.
-2. You upload the scaffold to Gemini/Nano Banana in the browser.
-3. You paste the prompt and generate 3 variants.
+1. Codex generates `scaffold.png`, `chatgpt-prompt.md`, and `gemini-prompt.md`.
+2. You upload the scaffold to ChatGPT or Gemini/Nano Banana in the browser.
+3. You paste the matching prompt and generate 3 variants.
 4. You save them as `v1.png`, `v2.png`, and `v3.png`.
 5. Codex handles crop/resize, review, and final export.
 
@@ -91,7 +100,7 @@ The skill will guide you through each phase interactively. Codex stores progress
 Rather than generating screenshots from scratch (which produces inconsistent results), the skill uses a two-stage approach:
 
 1. **compose.py** creates a deterministic scaffold with exact text positioning, device frame, and your simulator screenshot composited inside
-2. An optional image-editing model enhances the scaffold by adding a photorealistic device frame, breakout elements, and visual polish. Without API/MCP access, the skill supports a manual Gemini web handoff.
+2. An optional image-editing model enhances the scaffold by adding a photorealistic device frame, breakout elements, and visual polish. Without API/MCP access, the skill supports ChatGPT and Gemini web handoff prompts.
 
 This ensures consistent layout across all screenshots while letting AI handle the creative enhancement.
 
