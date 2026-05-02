@@ -1,137 +1,166 @@
 # Codex ASO Tool
 
-A Codex-first skill that helps generate high-converting App Store screenshots for your iOS app. It analyzes your codebase, identifies core benefits, reviews simulator screenshots, and creates App Store-ready screenshot images.
+A Codex-first skill for creating high-converting App Store screenshots for iOS apps.
+
+It analyzes your app, identifies the strongest download benefits, reviews simulator screenshots, pairs each benefit with the best screen, and produces App Store-ready screenshot assets.
 
 ## What It Does
 
-1. **Benefit Discovery** — Analyzes your app's codebase to identify the 3-5 core benefits that drive downloads
-2. **Screenshot Pairing** — Reviews your simulator screenshots, rates them, and pairs each with the best benefit
-3. **Generation** — Creates polished App Store screenshots using deterministic scaffolding (`compose.py`) with optional provider-based AI enhancement
-4. **Showcase** — Generates a preview image with all screenshots side-by-side
+1. **Benefit Discovery** - reads the app codebase and drafts 3-5 ASO benefit headlines.
+2. **Screenshot Review** - rates simulator screenshots as `Great`, `Usable`, or `Retake`.
+3. **Screenshot Pairing** - maps each benefit to the strongest screenshot.
+4. **Scaffold Generation** - creates exact App Store-sized screenshot layouts with `compose.py`.
+5. **Optional AI Enhancement** - supports OpenAI, Gemini/Nano Banana, ChatGPT web, Gemini web, or scaffold-only workflows.
+6. **Final Export** - crops/resizes approved images and saves final App Store-ready files.
 
-## Installation
+## Quick Start
 
-### Codex
+Install the skill locally:
 
 ```bash
 mkdir -p ~/.codex/skills
 cp -R /path/to/codex-aso-tool ~/.codex/skills/codex-aso-tool
 ```
 
-Invoke it with:
+From your iOS app repository, invoke:
 
 ```text
 $codex-aso-tool
 ```
 
-Codex progress is saved in the target app repository under:
+Codex saves progress in the target app repository:
 
 ```text
 .codex/aso-appstore-screenshots/
+  benefits.md
+  screenshot-analysis.md
+  pairings.md
+  generation.md
 ```
 
-### Claude Code Compatibility
+## Enhancement Modes
 
-The skill can still be adapted for Claude Code usage. If publishing a Claude-compatible package too, install it with the target repository URL:
+The tool is provider-agnostic. It always starts with deterministic scaffolds, then chooses the best enhancement route available.
+
+Priority order:
+
+1. **Built-in Codex image editing tool** - if the active Codex session exposes one.
+2. **OpenAI GPT Image API** - when `OPENAI_API_KEY` is available and API automation is wanted.
+3. **Gemini/Nano Banana API or MCP** - when `GEMINI_API_KEY` or a usable Gemini MCP image tool is available.
+4. **ChatGPT web manual mode** - when you have ChatGPT image access but no OpenAI API key.
+5. **Gemini web manual mode** - when you have Gemini Pro/Nano Banana web access but no Gemini API key.
+6. **Scaffold-only mode** - when no external AI enhancement is wanted.
+
+Web subscriptions are not API keys. ChatGPT Plus/Pro and Gemini Pro can still be useful through manual web mode, but they do not automatically give Codex API access.
+
+## Manual Web Mode
+
+Use this when you only have ChatGPT or Gemini in the browser.
+
+For each screenshot, Codex generates:
+
+```text
+screenshots/01-benefit-slug/
+  scaffold.png
+  chatgpt-prompt.md
+  gemini-prompt.md
+```
+
+Then you:
+
+1. Open ChatGPT or Gemini/Nano Banana in the browser.
+2. Upload `scaffold.png`.
+3. Paste the matching prompt file.
+4. Generate 3 variants.
+5. Save them as:
+
+```text
+screenshots/01-benefit-slug/v1.png
+screenshots/01-benefit-slug/v2.png
+screenshots/01-benefit-slug/v3.png
+```
+
+Codex then handles review, crop/resize, final selection, and export.
+
+## API/MCP Automation
+
+Automation is optional.
+
+OpenAI:
 
 ```bash
-claude install-skill github.com/YOUR_USERNAME/codex-aso-tool
+export OPENAI_API_KEY="..."
 ```
 
-### Python dependencies
+Gemini:
+
+```bash
+export GEMINI_API_KEY="..."
+```
+
+Gemini MCP can also be used in environments that expose a usable image editing tool. Most MCP setups still require API-backed credentials.
+
+## Requirements
+
+Install Pillow:
 
 ```bash
 pip install Pillow
 ```
 
-### Font requirement
+The scaffold generator expects SF Pro Display Black on macOS:
 
-The skill uses **SF Pro Display Black** for headline text. On macOS, install it from [Apple's developer fonts](https://developer.apple.com/fonts/). The expected path is:
-
-```
+```text
 /Library/Fonts/SF-Pro-Display-Black.otf
 ```
 
-### Optional AI Enhancement
+Install it from Apple's developer fonts if needed.
 
-Automated enhancement requires an image editing tool or API-backed provider access. Web subscriptions are useful for manual mode, but they are not the same as API keys.
+## Output
 
-Supported enhancement routes:
-
-- Built-in/local image editing tool when available in the active Codex session
-- OpenAI GPT Image API with `OPENAI_API_KEY`
-- Gemini/Nano Banana API or MCP with API-backed access
-- ChatGPT web manual mode
-- Gemini web manual mode
-- Scaffold-only mode
-
-For Claude Code, the original workflow can use [@houtini/gemini-mcp](https://www.npmjs.com/package/@houtini/gemini-mcp) for Gemini/Nano Banana enhancement:
-
-```bash
-npm install -g @houtini/gemini-mcp
-```
-
-Then add it to your Claude Code MCP config (`~/.claude/settings.json` or project `.mcp.json`).
-
-For Codex, the skill uses whatever image generation/editing capability is available in the current session. If none is available, it still produces exact App Store-sized scaffold screenshots using `compose.py`.
-
-If you only have ChatGPT or Gemini Pro in the browser, use manual web mode:
-
-1. Codex generates `scaffold.png`, `chatgpt-prompt.md`, and `gemini-prompt.md`.
-2. You upload the scaffold to ChatGPT or Gemini/Nano Banana in the browser.
-3. You paste the matching prompt and generate 3 variants.
-4. You save them as `v1.png`, `v2.png`, and `v3.png`.
-5. Codex handles crop/resize, review, and final export.
-
-## Usage
-
-From within your app's project directory, invoke the skill in Codex:
+Generated files are written to the target app repository:
 
 ```text
-$codex-aso-tool
+screenshots/
+  01-benefit-slug/
+    scaffold.png
+    chatgpt-prompt.md
+    gemini-prompt.md
+    v1.png
+    v2.png
+    v3.png
+    v1-resized.png
+  final/
+    01-benefit-slug.png
+    02-benefit-slug.png
+  showcase.png
 ```
 
-The skill will guide you through each phase interactively. Codex stores progress in `.codex/aso-appstore-screenshots/` inside the target app project.
+`screenshots/final/` contains the approved App Store-ready screenshots. Default target size is iPhone 6.7": `1290 x 2796`.
 
 ## How It Works
 
-### Scaffold → Enhance Pipeline
+The skill uses a two-stage pipeline:
 
-Rather than generating screenshots from scratch (which produces inconsistent results), the skill uses a two-stage approach:
+1. `compose.py` creates a deterministic scaffold with headline text, a device frame, a solid brand-color background, and the selected simulator screenshot.
+2. An optional image model or manual web workflow enhances the scaffold into a more polished marketing asset.
 
-1. **compose.py** creates a deterministic scaffold with exact text positioning, device frame, and your simulator screenshot composited inside
-2. An optional image-editing model enhances the scaffold by adding a photorealistic device frame, breakout elements, and visual polish. Without API/MCP access, the skill supports ChatGPT and Gemini web handoff prompts.
-
-This ensures consistent layout across all screenshots while letting AI handle the creative enhancement.
-
-### Output
-
-Screenshots are saved to a `screenshots/` directory in your project:
-
-```
-screenshots/
-  01-benefit-slug/          ← working versions
-    scaffold.png            ← deterministic compose.py output
-    v1.png, v2.png, v3.png  ← AI-enhanced versions
-    v1-resized.png, ...     ← cropped to App Store dimensions
-  final/                    ← approved screenshots, ready to upload
-    01-benefit-slug.png
-    02-benefit-slug.png
-  showcase.png              ← preview image with all screenshots
-```
-
-The `final/` folder contains App Store-ready screenshots at exact Apple dimensions (default: 1290×2796px for iPhone 6.7").
+This keeps layout, text, and App Store dimensions controlled while still allowing AI visual polish.
 
 ## Files
 
 | File | Purpose |
-|------|---------|
-| `SKILL.md` | The skill prompt — defines the multi-phase Codex workflow |
+| --- | --- |
+| `SKILL.md` | Codex skill workflow and trigger metadata |
 | `agents/openai.yaml` | Codex/OpenAI UI metadata |
-| `compose.py` | Deterministic scaffold generator (Pillow-based) |
-| `generate_frame.py` | Generates the device frame template |
-| `showcase.py` | Generates the side-by-side showcase image |
-| `assets/device_frame.png` | Pre-rendered iPhone device frame template |
+| `compose.py` | Deterministic App Store screenshot scaffold generator |
+| `generate_frame.py` | Regenerates the bundled iPhone frame template |
+| `showcase.py` | Creates a side-by-side showcase image |
+| `assets/device_frame.png` | Pre-rendered iPhone frame template |
+
+## Claude Code Compatibility
+
+This is Codex-first, but the workflow can be adapted for Claude Code. A Claude setup may use a Gemini MCP server such as `@houtini/gemini-mcp` when configured separately.
 
 ## License
 
